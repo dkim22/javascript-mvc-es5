@@ -55,7 +55,17 @@ var UIController = (function () {
 // 여기서는 각각 이벤트에서 무슨일이 일어날지를 등록하고 다른 컨트롤러에게 던진다.
 var controller = (function (budgetCtrl, UICtrl) {
 
-  var DOM = UICtrl.getDOMstrings();
+  var setupEventListeners = function() {
+    var DOM = UICtrl.getDOMstrings();
+
+    document.querySelector(DOM.inputBtn).addEventListener('click', ctrlAddItem);
+
+    document.addEventListener('keypress', function(event) {
+      if (event.keyCode === 13 || event.which === 13) {
+        ctrlAddItem();
+      }
+    });
+  }
 
   // keypress, click 이벤트와 같이 여러가지 이벤트에서 같은 작업을 반복하지 않으려고(dry) 만든 변수 
   var ctrlAddItem = function() {
@@ -72,14 +82,15 @@ var controller = (function (budgetCtrl, UICtrl) {
 
     // 5. 계산된 값을 UI에 그린다.(view)
   
+  };
+
+  return {
+    init: function() {
+      console.log('Application has started.');
+      setupEventListeners();
+    }
   }
 
-  document.querySelector(DOM.inputBtn).addEventListener('click', ctrlAddItem);
-
-  document.addEventListener('keypress', function(event) {
-    if (event.keyCode === 13 || event.which === 13) {
-      ctrlAddItem();
-    }
-  });
-
 })(budgetController, UIController);
+
+controller.init();
