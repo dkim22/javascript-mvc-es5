@@ -23,6 +23,37 @@
 
 // BUDGET CONTROLLER(model)
 var budgetController = (function () {
+  
+  // 데이터를 저장하기에는 오브젝트가 좋아서 오브젝트를 생성한다.
+  // 가계부에 저장할 많은 아이템(오브젝트)를 생성하기 위해서는 어떻게 해야하나? 펑션 컨스트럭터로 생성한다.
+  var Expense = function(id, description, value) {
+    this.id = id;
+    this.description = description;
+    this.value = value;
+  }
+
+  var Income = function(id, description, value) {
+    this.id = id;
+    this.description = description;
+    this.value = value;
+  }
+
+  // var allExpenses = [];
+  // var allIncomes = [];
+  // var totalExpenses = 0;
+  
+  // 위의 방식 보다 밑에 방식이 훨씬 깔끔하다.
+  // 만약 10개의 수입이 들어오면 데이터 오브젝트에 저장한다.
+  var data = {
+    allItems: {
+      exp: [],
+      inc: []
+    },
+    totals: {
+      exp: 0,
+      inc: 0
+    }
+  };
 
 })();
 
@@ -49,6 +80,7 @@ var UIController = (function () {
       return DOMstrings;
     }
   }
+
 })();
 
 // GLOBAL APP CONTROLLER(controller)
@@ -85,6 +117,7 @@ var controller = (function (budgetCtrl, UICtrl) {
   };
 
   return {
+    // 처음에 하고 싶은 것을 하는 것인데 실행하기 위해 필요한 최소한의 설정을 한다.
     init: function() {
       console.log('Application has started.');
       setupEventListeners();
