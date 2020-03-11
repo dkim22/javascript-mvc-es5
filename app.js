@@ -27,11 +27,59 @@ var budgetController = (function () {
 })();
 
 // UI CONTROLLER(view)
+// view안에서 만든 함수는 다른 view, model에서 사용해야 하므로 프라이빗 함수로 만들면 안됨
 var UIController = (function () {
+  
+  var DOMstrings = {
+    inputType: '.add__type',
+    inputDescription: '.add__description',
+    inputValue: '.add__value',
+    inputBtn: '.add__btn'
+  };
 
+  return {
+    getInput: function() {
+      return {
+        type: document.querySelector(DOMstrings.inputType).value, // type: inc | exp
+        description: document.querySelector(DOMstrings.inputDescription).value,
+        value: document.querySelector(DOMstrings.inputValue).value
+      };
+    },
+    getDOMstrings: function() {
+      return DOMstrings;
+    }
+  }
 })();
 
 // GLOBAL APP CONTROLLER(controller)
+// 여기서는 각각 이벤트에서 무슨일이 일어날지를 등록하고 다른 컨트롤러에게 던진다.
 var controller = (function (budgetCtrl, UICtrl) {
+
+  var DOM = UICtrl.getDOMstrings();
+
+  // keypress, click 이벤트와 같이 여러가지 이벤트에서 같은 작업을 반복하지 않으려고(dry) 만든 변수 
+  var ctrlAddItem = function() {
+    
+    // 1. 필드의 인풋 데이터를 가져온다.
+    var input = UICtrl.getInput();
+    console.log(input);
+
+    // 2. budget controller(model)에 아이템을 넣는다.
+
+    // 3. UI controller(view)에 아이템을 넣는다.
+
+    // 4. 바뀌어야 하는 가계부 금액 계산을 하고(model)
+
+    // 5. 계산된 값을 UI에 그린다.(view)
+  
+  }
+
+  document.querySelector(DOM.inputBtn).addEventListener('click', ctrlAddItem);
+
+  document.addEventListener('keypress', function(event) {
+    if (event.keyCode === 13 || event.which === 13) {
+      ctrlAddItem();
+    }
+  });
 
 })(budgetController, UIController);
