@@ -55,6 +55,36 @@ var budgetController = (function () {
     }
   };
 
+  return {
+    addItem: function(type, des, val) {
+      var newItem, ID;
+
+      // [1 2 3 4 5] 다음 아이디는 6
+      // [1 2 4 6 8] 다음 아이디는 9
+      // ID = last ID + 1
+
+      // 새로운 아이디를 만든다.
+      if (data.allItems[type].length > 0) {
+        ID = data.allItems[type][data.allItems[type].length - 1].id + 1;
+      } else {
+        ID = 0;
+      }
+
+      // inc 또는 exp를 기반으로 새로운 아이템을 생성한다.
+      if (type === 'exp') {
+        newItem = new Expense(ID, des, val);
+      } else if (type === 'inc') {
+        newItem = new Income(ID, des, val);
+      }
+
+      data.allItems[type].push(newItem);
+      return newItem;
+    },
+    tesing: function() {
+      console.log(data);
+    }
+  }
+
 })();
 
 // UI CONTROLLER(view)
@@ -101,12 +131,13 @@ var controller = (function (budgetCtrl, UICtrl) {
 
   // keypress, click 이벤트와 같이 여러가지 이벤트에서 같은 작업을 반복하지 않으려고(dry) 만든 변수 
   var ctrlAddItem = function() {
-    
+    var input, newItem;
+
     // 1. 필드의 인풋 데이터를 가져온다.
-    var input = UICtrl.getInput();
-    console.log(input);
+    input = UICtrl.getInput();
 
     // 2. budget controller(model)에 아이템을 넣는다.
+    newItem = budgetCtrl.addItem(input.type, input.description, input.value);
 
     // 3. UI controller(view)에 아이템을 넣는다.
 
