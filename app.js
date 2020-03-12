@@ -95,7 +95,9 @@ var UIController = (function () {
     inputType: '.add__type',
     inputDescription: '.add__description',
     inputValue: '.add__value',
-    inputBtn: '.add__btn'
+    inputBtn: '.add__btn',
+    incomeContainer: '.income__list',
+    expensesContainer: '.expenses__list'
   };
 
   return {
@@ -105,6 +107,25 @@ var UIController = (function () {
         description: document.querySelector(DOMstrings.inputDescription).value,
         value: document.querySelector(DOMstrings.inputValue).value
       };
+    },
+    addListItem: function(obj, type) {
+      var html, newHtml, element;
+
+      // DOM에 추가할 템플릿을 만든다.
+      if (type === 'inc') {
+        element = DOMstrings.incomeContainer;
+        html = '<div class="item clearfix" id="inc-%id%"> <div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+      } else if (type === 'exp') {
+        element = DOMstrings.expensesContainer;
+        html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+      }
+
+      // 템플릿에 실제 데이터를 넣는다.
+      newHtml = html.replace('%id%', obj.id);
+      newHtml = newHtml.replace('%description%', obj.description);
+      newHtml = newHtml.replace('%value%', obj.value);
+    
+      document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
     },
     getDOMstrings: function() {
       return DOMstrings;
@@ -140,6 +161,7 @@ var controller = (function (budgetCtrl, UICtrl) {
     newItem = budgetCtrl.addItem(input.type, input.description, input.value);
 
     // 3. UI controller(view)에 아이템을 넣는다.
+    UICtrl.addListItem(newItem, input.type);
 
     // 4. 바뀌어야 하는 가계부 금액 계산을 하고(model)
 
