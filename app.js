@@ -127,6 +127,17 @@ var UIController = (function () {
     
       document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
     },
+    clearFields: function() {
+      var fields, fieldsArr;
+
+      fields = document.querySelectorAll(DOMstrings.inputDescription + ',' + DOMstrings.inputValue)
+      fieldsArr = Array.prototype.slice.call(fields);
+
+      fieldsArr.forEach(function(current, index, array) {
+        current.value = ""
+      });
+      fieldsArr[0].focus();
+    },
     getDOMstrings: function() {
       return DOMstrings;
     }
@@ -163,9 +174,11 @@ var controller = (function (budgetCtrl, UICtrl) {
     // 3. UI controller(view)에 아이템을 넣는다.
     UICtrl.addListItem(newItem, input.type);
 
-    // 4. 바뀌어야 하는 가계부 금액 계산을 하고(model)
+    // 4. 필드의 인풋 데이터를 초기화 하고 포커스를 다시 처음으로 준다.
+    UICtrl.clearFields();
+    // 5. 바뀌어야 하는 가계부 금액 계산을 하고(model)
 
-    // 5. 계산된 값을 UI에 그린다.(view)
+    // 6. 계산된 값을 UI에 그린다.(view)
   
   };
 
