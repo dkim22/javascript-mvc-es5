@@ -38,6 +38,14 @@ var budgetController = (function () {
     this.value = value;
   }
 
+  var calculateTotal = function(type) {
+    var sum = 0;
+    data.allItems[type].forEach(function(cur) {
+      sum += cur.value;
+    });
+    data.totals[type] = sum;
+  }
+
   // var allExpenses = [];
   // var allIncomes = [];
   // var totalExpenses = 0;
@@ -52,7 +60,9 @@ var budgetController = (function () {
     totals: {
       exp: 0,
       inc: 0
-    }
+    },
+    budget: 0,
+    percentage: -1
   };
 
   return {
@@ -80,6 +90,30 @@ var budgetController = (function () {
       data.allItems[type].push(newItem);
       return newItem;
     },
+    calculateBudget: function() {
+
+      // 모든 수입과 수출을 각각 계산한다. 반복하지 않기 위해 프라이빗 함수로 만든다.
+      calculateTotal('inc');
+      calculateTotal('exp');
+
+      // 가계부를 계산한다. 모든 수입 - 모든 수출.
+      data.budget = data.totals.inc - data.totals.exp;
+      
+      // 가계부의 퍼센테이지도 계산한다. 모든 수출 / 모든 수입 * 100에 반올림
+      if (data.totals.inc > 0) {
+       data.percentage = Math.round((data.totals.exp / data.totals.inc) * 100);
+      } else {
+        data.percentage = -1;
+      }
+    },
+    getBudget: function() {
+      return {
+        budget: data.budget,
+        percentage: data.percentage,
+        totalInc: data.totals.inc,
+        totalExp: data.totals.exp
+      }
+    },
     tesing: function() {
       console.log(data);
     }
@@ -97,7 +131,11 @@ var UIController = (function () {
     inputValue: '.add__value',
     inputBtn: '.add__btn',
     incomeContainer: '.income__list',
-    expensesContainer: '.expenses__list'
+    expensesContainer: '.expenses__list',
+    budgetLabel: '.budget__value',
+    percentageLabel: '.budget__expenses--percentage',
+    incomeLabel: '.budget__income--value',
+    expensesLabel: '.budget__expenses--value'
   };
 
   return {
@@ -138,6 +176,18 @@ var UIController = (function () {
       });
       fieldsArr[0].focus();
     },
+    displayBudget: function(obj) {
+      document.querySelector(DOMstrings.budgetLabel).textContent = obj.budget;
+      document.querySelector(DOMstrings.incomeLabel).textContent = obj.totalInc;
+      document.querySelector(DOMstrings.expensesLabel).textContent = obj.totalExp;
+
+      if (obj.percentage > 0) {
+        document.querySelector(DOMstrings.percentageLabel).textContent = obj.percentage + '%';
+      } else {
+        document.querySelector(DOMstrings.percentageLabel).textContent = '---';
+      }
+  
+    },
     getDOMstrings: function() {
       return DOMstrings;
     }
@@ -164,11 +214,13 @@ var controller = (function (budgetCtrl, UICtrl) {
   var updateBudget = function() {
 
     // 1. 바뀌어야 하는 가계부 금액 계산을 하고(model)
-
+    budgetCtrl.calculateBudget();
+    
     // 2. 가계부 금액을 리턴한다.
-
+    var budget = budgetCtrl.getBudget();
+    
     // 3. 계신된 값을 UI에 그린다.
-
+    UICtrl.displayBudget(budget);
   };
 
   // keypress, click 이벤트와 같이 여러가지 이벤트에서 같은 작업을 반복하지 않으려고(dry) 만든 변수 
@@ -195,13 +247,18 @@ var controller = (function (budgetCtrl, UICtrl) {
       updateBudget();
     }
 
-  
   };
 
   return {
     // 처음에 하고 싶은 것을 하는 것인데 실행하기 위해 필요한 최소한의 설정을 한다.
     init: function() {
       console.log('Application has started.');
+      UICtrl.displayBudget({
+        budget: 0,
+        percentage: -1,
+        totalInc: 0,
+        totalExp: 0
+      });
       setupEventListeners();
     }
   }
