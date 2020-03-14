@@ -6,3 +6,6 @@
 
 ## JS MVC Architecture
 ![image](./images/mvc-fundmental.png)
+
+## First part Architecture
+![image](./images/first-part.png)
