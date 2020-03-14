@@ -105,7 +105,7 @@ var UIController = (function () {
       return {
         type: document.querySelector(DOMstrings.inputType).value, // type: inc | exp
         description: document.querySelector(DOMstrings.inputDescription).value,
-        value: document.querySelector(DOMstrings.inputValue).value
+        value: parseFloat(document.querySelector(DOMstrings.inputValue).value)
       };
     },
     addListItem: function(obj, type) {
@@ -168,14 +168,18 @@ var controller = (function (budgetCtrl, UICtrl) {
     // 1. 필드의 인풋 데이터를 가져온다.
     input = UICtrl.getInput();
 
-    // 2. budget controller(model)에 아이템을 넣는다.
-    newItem = budgetCtrl.addItem(input.type, input.description, input.value);
+    // 인풋데이터의 유효성 검증을 해준다
+    if (input.description.trim() !== "" && !isNaN(input.value) && input.value > 0) {
+      // 2. budget controller(model)에 아이템을 넣는다.
+      newItem = budgetCtrl.addItem(input.type, input.description, input.value);
 
-    // 3. UI controller(view)에 아이템을 넣는다.
-    UICtrl.addListItem(newItem, input.type);
+      // 3. UI controller(view)에 아이템을 넣는다.
+      UICtrl.addListItem(newItem, input.type);
 
-    // 4. 필드의 인풋 데이터를 초기화 하고 포커스를 다시 처음으로 준다.
-    UICtrl.clearFields();
+      // 4. 필드의 인풋 데이터를 초기화 하고 포커스를 다시 처음으로 준다.
+      UICtrl.clearFields();
+    }
+
     // 5. 바뀌어야 하는 가계부 금액 계산을 하고(model)
 
     // 6. 계산된 값을 UI에 그린다.(view)
