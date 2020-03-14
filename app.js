@@ -161,6 +161,16 @@ var controller = (function (budgetCtrl, UICtrl) {
     });
   }
 
+  var updateBudget = function() {
+
+    // 1. 바뀌어야 하는 가계부 금액 계산을 하고(model)
+
+    // 2. 가계부 금액을 리턴한다.
+
+    // 3. 계신된 값을 UI에 그린다.
+
+  };
+
   // keypress, click 이벤트와 같이 여러가지 이벤트에서 같은 작업을 반복하지 않으려고(dry) 만든 변수 
   var ctrlAddItem = function() {
     var input, newItem;
@@ -178,11 +188,13 @@ var controller = (function (budgetCtrl, UICtrl) {
 
       // 4. 필드의 인풋 데이터를 초기화 하고 포커스를 다시 처음으로 준다.
       UICtrl.clearFields();
+
+      // 밑에 두 부분은 updateBudget이라는 함수를 만든다. 반복하지 않기 위하여
+      // 5. 바뀌어야 하는 가계부 금액 계산을 하고(model)
+      // 6. 계산된 값을 UI에 그린다.(view)
+      updateBudget();
     }
 
-    // 5. 바뀌어야 하는 가계부 금액 계산을 하고(model)
-
-    // 6. 계산된 값을 UI에 그린다.(view)
   
   };
 
