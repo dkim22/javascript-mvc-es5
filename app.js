@@ -98,6 +98,23 @@ var budgetController = (function () {
       data.allItems[type].push(newItem);
       return newItem;
     },
+    deleteItem: function(type, id) {
+      var ids, index;
+
+      // id = 6;
+      // data.allItems[type][id];
+      // ids = [1 2 4 6 8];
+      // index = 3;
+      ids = data.allItems[type].map(function(current) {
+        return current.id;
+      });
+
+      index = ids.indexOf(id);
+
+      if (index !== -1) {
+        data.allItems[type].splice(index, 1);
+      }
+    },
     calculateBudget: function() {
 
       // 모든 수입과 수출을 각각 계산한다. 반복하지 않기 위해 프라이빗 함수로 만든다.
@@ -143,7 +160,8 @@ var UIController = (function () {
     budgetLabel: '.budget__value',
     percentageLabel: '.budget__expenses--percentage',
     incomeLabel: '.budget__income--value',
-    expensesLabel: '.budget__expenses--value'
+    expensesLabel: '.budget__expenses--value',
+    container: '.container'
   };
 
   return {
@@ -173,6 +191,11 @@ var UIController = (function () {
     
       document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
     },
+    deleteListItem: function(selectorID) {
+      var el = document.getElementById(selectorID);
+      
+      el.parentNode.removeChild(el);
+    },
     clearFields: function() {
       var fields, fieldsArr;
 
@@ -194,7 +217,6 @@ var UIController = (function () {
       } else {
         document.querySelector(DOMstrings.percentageLabel).textContent = '---';
       }
-  
     },
     getDOMstrings: function() {
       return DOMstrings;
@@ -217,7 +239,13 @@ var controller = (function (budgetCtrl, UICtrl) {
         ctrlAddItem();
       }
     });
-  }
+
+    // 이벤트 위임
+    // 1. 우리가 관심있는 수 많은 엘리먼트에 이벤트를 하나하나 다는 것이 힘들 때
+    // 2. 페이지 로드가 되기전에는 돔에 없다가 이벤트에 의해 생긴 엘리먼트에 이벤트가 필요할 경우
+    // 지금 같은 경우가(2) 돔이 로드 된 이후에 우리가 만든 가계부 자산의 아이템 하나하나에 삭제이벤트를 달기 위해서 컨테이너에 이벤트를 단다.
+    document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
+  };
 
   var updateBudget = function() {
 
@@ -252,6 +280,27 @@ var controller = (function (budgetCtrl, UICtrl) {
       // 밑에 두 부분은 updateBudget이라는 함수를 만든다. 반복하지 않기 위하여
       // 5. 바뀌어야 하는 가계부 금액 계산을 하고(model)
       // 6. 계산된 값을 UI에 그린다.(view)
+      updateBudget();
+    }
+  };
+
+  var ctrlDeleteItem = function(event) {
+
+    var itemID, splitID, type, ID;
+
+    itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
+
+    if (itemID) {
+      // inc-1
+      splitID = itemID.split('-');
+      type = splitID[0];
+      ID = parseInt(splitID[1]);
+
+      // 1. 모델에 있는 데이터 스트럭쳐에서 아이템을 지운다.
+      budgetCtrl.deleteItem(type, ID);
+      // 2. 뷰에 있는 아이템을 제거 한다.
+      UICtrl.deleteListItem(itemID);
+      // 3. 뷰에 있는 가계부 가격을 업데이트 한다.
       updateBudget();
     }
 
