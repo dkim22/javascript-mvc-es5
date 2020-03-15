@@ -9,3 +9,6 @@
 
 ## First part Architecture
 ![image](./images/first-part.png)
+
+## Second part Architecture
+![image](./images/second-part.png)
