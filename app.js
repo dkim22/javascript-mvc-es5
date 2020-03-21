@@ -204,7 +204,8 @@ var UIController = (function () {
     incomeLabel: '.budget__income--value',
     expensesLabel: '.budget__expenses--value',
     container: '.container',
-    expensesPercLabel: '.item__percentage'
+    expensesPercLabel: '.item__percentage',
+    dateLabel: '.budget__title--month'
   };
 
   var formatNumber = function (num, type) {
@@ -308,6 +309,18 @@ var UIController = (function () {
           current.textContent = '---';
         }
       });
+    },
+    displayMonth: function () {
+      var now, months, month, year;
+
+      now = new Date();
+      // var christmas = new Date(2020, 11, 25);
+      
+      months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      month = now.getMonth();
+
+      year = now.getFullYear();
+      document.querySelector(DOMstrings.dateLabel).textContent = months[month] + ' ' + year;
     },
     getDOMstrings: function () {
       return DOMstrings;
@@ -418,6 +431,7 @@ var controller = (function (budgetCtrl, UICtrl) {
     // 처음에 하고 싶은 것을 하는 것인데 실행하기 위해 필요한 최소한의 설정을 한다.
     init: function () {
       console.log('Application has started.');
+      UICtrl.displayMonth();
       UICtrl.displayBudget({
         budget: 0,
         percentage: -1,
