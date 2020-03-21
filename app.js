@@ -38,24 +38,37 @@
 
 // BUDGET CONTROLLER(model)
 var budgetController = (function () {
-  
+
   // 데이터를 저장하기에는 오브젝트가 좋아서 오브젝트를 생성한다.
   // 가계부에 저장할 많은 아이템(오브젝트)를 생성하기 위해서는 어떻게 해야하나? 펑션 컨스트럭터로 생성한다.
-  var Expense = function(id, description, value) {
+  var Expense = function (id, description, value) {
+    this.id = id;
+    this.description = description;
+    this.value = value;
+    this.percentage = -1;
+  }
+
+  Expense.prototype.calcPercentage = function (totalIncome) {
+    if (totalIncome > 0) {
+      this.percentage = Math.round((this.value / totalIncome) * 100);
+    } else {
+      this.percentage = -1;
+    }
+  };
+
+  Expense.prototype.getPercentage = function () {
+    return this.percentage;
+  };
+
+  var Income = function (id, description, value) {
     this.id = id;
     this.description = description;
     this.value = value;
   }
 
-  var Income = function(id, description, value) {
-    this.id = id;
-    this.description = description;
-    this.value = value;
-  }
-
-  var calculateTotal = function(type) {
+  var calculateTotal = function (type) {
     var sum = 0;
-    data.allItems[type].forEach(function(cur) {
+    data.allItems[type].forEach(function (cur) {
       sum += cur.value;
     });
     data.totals[type] = sum;
@@ -64,7 +77,7 @@ var budgetController = (function () {
   // var allExpenses = [];
   // var allIncomes = [];
   // var totalExpenses = 0;
-  
+
   // 위의 방식 보다 밑에 방식이 훨씬 깔끔하다.
   // 만약 10개의 수입이 들어오면 데이터 오브젝트에 저장한다.
   var data = {
@@ -81,7 +94,7 @@ var budgetController = (function () {
   };
 
   return {
-    addItem: function(type, des, val) {
+    addItem: function (type, des, val) {
       var newItem, ID;
 
       // [1 2 3 4 5] 다음 아이디는 6
@@ -105,14 +118,14 @@ var budgetController = (function () {
       data.allItems[type].push(newItem);
       return newItem;
     },
-    deleteItem: function(type, id) {
+    deleteItem: function (type, id) {
       var ids, index;
 
       // id = 6;
       // data.allItems[type][id];
       // ids = [1 2 4 6 8];
       // index = 3;
-      ids = data.allItems[type].map(function(current) {
+      ids = data.allItems[type].map(function (current) {
         return current.id;
       });
 
@@ -122,23 +135,45 @@ var budgetController = (function () {
         data.allItems[type].splice(index, 1);
       }
     },
-    calculateBudget: function() {
+    calculateBudget: function () {
 
-      // 모든 수입과 수출을 각각 계산한다. 반복하지 않기 위해 프라이빗 함수로 만든다.
+      // 모든 수입과 지출을 각각 계산한다. 반복하지 않기 위해 프라이빗 함수로 만든다.
       calculateTotal('inc');
       calculateTotal('exp');
 
-      // 가계부를 계산한다. 모든 수입 - 모든 수출.
+      // 가계부를 계산한다. 모든 수입 - 모든 지출.
       data.budget = data.totals.inc - data.totals.exp;
-      
-      // 가계부의 퍼센테이지도 계산한다. 모든 수출 / 모든 수입 * 100에 반올림
+
+      // 가계부의 퍼센테이지도 계산한다. 모든 지출 / 모든 수입 * 100에 반올림
       if (data.totals.inc > 0) {
-       data.percentage = Math.round((data.totals.exp / data.totals.inc) * 100);
+        data.percentage = Math.round((data.totals.exp / data.totals.inc) * 100);
       } else {
         data.percentage = -1;
       }
     },
-    getBudget: function() {
+    calculatePercentages: function () {
+      // 모든 지출 오브젝트 개인적으로 필요 한 것이다. 이것은 메소드가 되어야 한다.
+      /* 
+        a=20
+        b=20
+        c=40
+        income=100
+        a=20/100=20%
+        b=10/100=10%
+        c=40/100=40%
+      */
+
+      data.allItems.exp.forEach(function (cur) {
+        cur.calcPercentage(data.totals.inc);
+      });
+    },
+    getPercentages: function () {
+      var allPerc = data.allItems.exp.map(function (cur) {
+        return cur.getPercentage();
+      });
+      return allPerc;
+    },
+    getBudget: function () {
       return {
         budget: data.budget,
         percentage: data.percentage,
@@ -146,7 +181,7 @@ var budgetController = (function () {
         totalExp: data.totals.exp
       }
     },
-    tesing: function() {
+    tesing: function () {
       console.log(data);
     }
   }
@@ -156,7 +191,7 @@ var budgetController = (function () {
 // UI CONTROLLER(view)
 // view안에서 만든 함수는 다른 view, model에서 사용해야 하므로 프라이빗 함수로 만들면 안됨
 var UIController = (function () {
-  
+
   var DOMstrings = {
     inputType: '.add__type',
     inputDescription: '.add__description',
@@ -168,18 +203,47 @@ var UIController = (function () {
     percentageLabel: '.budget__expenses--percentage',
     incomeLabel: '.budget__income--value',
     expensesLabel: '.budget__expenses--value',
-    container: '.container'
+    container: '.container',
+    expensesPercLabel: '.item__percentage'
   };
 
+  var formatNumber = function (num, type) {
+    /*
+      + or - 를 숫자 앞에 붙인다.
+      정확히 소수점 2개를 붙인다.
+      1000단위로 콤마를 넣는다.
+
+      2310.4567 -> + 2,310.46
+      2000 -> + 2,000.00
+    */
+    var numSplit, int, dec, type;
+
+    num = Math.abs(num);
+    num = num.toFixed(2);
+
+    numSplit = num.split('.');
+
+    int = numSplit[0];
+    if (int.length > 3) {
+      // input 2310, output 2,310
+      // input 23100, output 23,100
+      int = int.substr(0, int.length - 3) + ',' + int.substr(int.length - 3, int.length);
+    }
+
+    dec = numSplit[1];
+
+    return (type === 'exp' ? '-' : '+') + ' ' + int + '.' + dec;
+  }
+
   return {
-    getInput: function() {
+    getInput: function () {
       return {
         type: document.querySelector(DOMstrings.inputType).value, // type: inc | exp
         description: document.querySelector(DOMstrings.inputDescription).value,
         value: parseFloat(document.querySelector(DOMstrings.inputValue).value)
       };
     },
-    addListItem: function(obj, type) {
+    addListItem: function (obj, type) {
       var html, newHtml, element;
 
       // DOM에 추가할 템플릿을 만든다.
@@ -194,30 +258,33 @@ var UIController = (function () {
       // 템플릿에 실제 데이터를 넣는다.
       newHtml = html.replace('%id%', obj.id);
       newHtml = newHtml.replace('%description%', obj.description);
-      newHtml = newHtml.replace('%value%', obj.value);
-    
+      newHtml = newHtml.replace('%value%', formatNumber(obj.value));
+
       document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
     },
-    deleteListItem: function(selectorID) {
+    deleteListItem: function (selectorID) {
       var el = document.getElementById(selectorID);
-      
+
       el.parentNode.removeChild(el);
     },
-    clearFields: function() {
+    clearFields: function () {
       var fields, fieldsArr;
 
       fields = document.querySelectorAll(DOMstrings.inputDescription + ',' + DOMstrings.inputValue)
       fieldsArr = Array.prototype.slice.call(fields);
 
-      fieldsArr.forEach(function(current, index, array) {
+      fieldsArr.forEach(function (current, index, array) {
         current.value = ""
       });
       fieldsArr[0].focus();
     },
-    displayBudget: function(obj) {
-      document.querySelector(DOMstrings.budgetLabel).textContent = obj.budget;
-      document.querySelector(DOMstrings.incomeLabel).textContent = obj.totalInc;
-      document.querySelector(DOMstrings.expensesLabel).textContent = obj.totalExp;
+    displayBudget: function (obj) {
+      var type;
+      obj.budget > 0 ? type = 'inc' : type = 'exp';
+
+      document.querySelector(DOMstrings.budgetLabel).textContent = formatNumber(obj.budget, type);
+      document.querySelector(DOMstrings.incomeLabel).textContent = formatNumber(obj.totalInc, 'inc');
+      document.querySelector(DOMstrings.expensesLabel).textContent = formatNumber(obj.totalExp, 'exp');
 
       if (obj.percentage > 0) {
         document.querySelector(DOMstrings.percentageLabel).textContent = obj.percentage + '%';
@@ -225,7 +292,24 @@ var UIController = (function () {
         document.querySelector(DOMstrings.percentageLabel).textContent = '---';
       }
     },
-    getDOMstrings: function() {
+    displayPercentages: function (percentages) {
+      var fields = document.querySelectorAll(DOMstrings.expensesPercLabel);
+
+      var nodeListForEach = function (list, callback) {
+        for (var i = 0; i < list.length; i++) {
+          callback(list[i], i);
+        }
+      }
+
+      nodeListForEach(fields, function (current, index) {
+        if (percentages[index] > 0) {
+          current.textContent = percentages[index] + '%';
+        } else {
+          current.textContent = '---';
+        }
+      });
+    },
+    getDOMstrings: function () {
       return DOMstrings;
     }
   }
@@ -236,12 +320,12 @@ var UIController = (function () {
 // 여기서는 각각 이벤트에서 무슨일이 일어날지를 등록하고 다른 컨트롤러에게 던진다.
 var controller = (function (budgetCtrl, UICtrl) {
 
-  var setupEventListeners = function() {
+  var setupEventListeners = function () {
     var DOM = UICtrl.getDOMstrings();
 
     document.querySelector(DOM.inputBtn).addEventListener('click', ctrlAddItem);
 
-    document.addEventListener('keypress', function(event) {
+    document.addEventListener('keypress', function (event) {
       if (event.keyCode === 13 || event.which === 13) {
         ctrlAddItem();
       }
@@ -254,20 +338,32 @@ var controller = (function (budgetCtrl, UICtrl) {
     document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
   };
 
-  var updateBudget = function() {
+  var updateBudget = function () {
 
     // 1. 바뀌어야 하는 가계부 금액 계산을 하고(model)
     budgetCtrl.calculateBudget();
-    
+
     // 2. 가계부 금액을 리턴한다.
     var budget = budgetCtrl.getBudget();
-    
+
     // 3. 계신된 값을 UI에 그린다.
     UICtrl.displayBudget(budget);
   };
 
+  var updatePercentages = function () {
+
+    // 1. 퍼센테이지를 계산한다. (모델)
+    budgetCtrl.calculatePercentages();
+
+    // 2. 모델에서 퍼센테이지를 읽는다.
+    var percentages = budgetCtrl.getPercentages();
+
+    // 3. 새로운 퍼센테이지를 가지고 UI를 업데이트 한다.
+    UICtrl.displayPercentages(percentages);
+  };
+
   // keypress, click 이벤트와 같이 여러가지 이벤트에서 같은 작업을 반복하지 않으려고(dry) 만든 변수 
-  var ctrlAddItem = function() {
+  var ctrlAddItem = function () {
     var input, newItem;
 
     // 1. 필드의 인풋 데이터를 가져온다.
@@ -288,10 +384,13 @@ var controller = (function (budgetCtrl, UICtrl) {
       // 5. 바뀌어야 하는 가계부 금액 계산을 하고(model)
       // 6. 계산된 값을 UI에 그린다.(view)
       updateBudget();
+
+      // 7. 각 지출 아이템의 소비 퍼센테이지를 계산한다.
+      updatePercentages();
     }
   };
 
-  var ctrlDeleteItem = function(event) {
+  var ctrlDeleteItem = function (event) {
 
     var itemID, splitID, type, ID;
 
@@ -309,13 +408,15 @@ var controller = (function (budgetCtrl, UICtrl) {
       UICtrl.deleteListItem(itemID);
       // 3. 뷰에 있는 가계부 가격을 업데이트 한다.
       updateBudget();
+      // 4. 각 지출 아이템의 소비 퍼센테이지를 계산한다.
+      updatePercentages();
     }
 
   };
 
   return {
     // 처음에 하고 싶은 것을 하는 것인데 실행하기 위해 필요한 최소한의 설정을 한다.
-    init: function() {
+    init: function () {
       console.log('Application has started.');
       UICtrl.displayBudget({
         budget: 0,
