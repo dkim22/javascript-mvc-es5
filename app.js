@@ -236,6 +236,12 @@ var UIController = (function () {
     return (type === 'exp' ? '-' : '+') + ' ' + int + '.' + dec;
   }
 
+  var nodeListForEach = function (list, callback) {
+    for (var i = 0; i < list.length; i++) {
+      callback(list[i], i);
+    }
+  };
+
   return {
     getInput: function () {
       return {
@@ -296,12 +302,6 @@ var UIController = (function () {
     displayPercentages: function (percentages) {
       var fields = document.querySelectorAll(DOMstrings.expensesPercLabel);
 
-      var nodeListForEach = function (list, callback) {
-        for (var i = 0; i < list.length; i++) {
-          callback(list[i], i);
-        }
-      }
-
       nodeListForEach(fields, function (current, index) {
         if (percentages[index] > 0) {
           current.textContent = percentages[index] + '%';
@@ -321,6 +321,18 @@ var UIController = (function () {
 
       year = now.getFullYear();
       document.querySelector(DOMstrings.dateLabel).textContent = months[month] + ' ' + year;
+    },
+    changedType: function () {
+      var fields = document.querySelectorAll(
+        DOMstrings.inputType + ',' +
+        DOMstrings.inputDescription + ',' +
+        DOMstrings.inputValue);
+
+      nodeListForEach(fields, function(cur) {
+        cur.classList.toggle('red-focus');
+      });
+
+      document.querySelector(DOMstrings.inputBtn).classList.toggle('red');
     },
     getDOMstrings: function () {
       return DOMstrings;
@@ -349,6 +361,8 @@ var controller = (function (budgetCtrl, UICtrl) {
     // 2. 페이지 로드가 되기전에는 돔에 없다가 이벤트에 의해 생긴 엘리먼트에 이벤트가 필요할 경우
     // 지금 같은 경우가(2) 돔이 로드 된 이후에 우리가 만든 가계부 자산의 아이템 하나하나에 삭제이벤트를 달기 위해서 컨테이너에 이벤트를 단다.
     document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
+  
+    document.querySelector(DOM.inputType).addEventListener('change', UICtrl.changedType);
   };
 
   var updateBudget = function () {
